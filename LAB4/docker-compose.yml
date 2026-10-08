@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:17
+    container_name: gasdb
+    restart: always
+    environment:
+      POSTGRES_DB: gasdb
+      POSTGRES_USER: gasuser
+      POSTGRES_PASSWORD: GasPass2026
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - gasnet
+
+  web:
+    image: liri3d/gasapp:1.0
+    container_name: gasapp
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DB_NAME: gasdb
+      DB_USER: gasuser
+      DB_PASSWORD: GasPass2026
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      - db
+    networks:
+      - gasnet
+
+volumes:
+  pgdata:
+
+networks:
+  gasnet:
+    driver: bridge
