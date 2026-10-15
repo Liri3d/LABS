@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ishchenko-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ishchenko-pod
+  template:
+    metadata:
+      labels:
+        app: ishchenko-pod
+    spec:
+      volumes:
+        - name: gas-storage
+          persistentVolumeClaim:
+            claimName: ishchenko-pvc
+      containers:
+        - name: ishchenko-cont-postgres
+          image: postgres:17
+          env:
+            - name: POSTGRES_DB
+              value: gasdb
+            - name: POSTGRES_USER
+              value: gasuser
+            - name: POSTGRES_PASSWORD
+              value: GasPass2026
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: gas-storage
+          ports:
+            - containerPort: 5432
+
+        - name: ishchenko-cont-django
+          image: liri3d/gasapp:1.0
+          command:
+            - sh
+            - -c
+            - |
+              echo "Applying migrations..."
+              python manage.py migrate
+              echo "Starting Django server..."
+              python manage.py runserver 0.0.0.0:8000
+          env:
+            - name: DB_NAME
+              value: gasdb
+            - name: DB_USER
+              value: gasuser
+            - name: DB_PASSWORD
+              value: GasPass2026
+            - name: DB_HOST
+              value: 127.0.0.1
+            - name: DB_PORT
+              value: "5432"
+          ports:
+            - containerPort: 8000
