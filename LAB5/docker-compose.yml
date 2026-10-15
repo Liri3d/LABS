@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:17
+    container_name: gasdb
+    restart: always
+    environment:
+      POSTGRES_DB: gasdb
+      POSTGRES_USER: gasuser
+      POSTGRES_PASSWORD: GasPass2026
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - ishchenko_net
+
+  web:
+    image: liri3d/gasapp:1.0
+    container_name: gasapp
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DB_NAME: gasdb
+      DB_USER: gasuser
+      DB_PASSWORD: GasPass2026
+      DB_HOST: db
+      DB_PORT: 5432
+      LOG_FILE_PATH: /app/logs/requests.log
+    volumes:
+      - /home/vboxuser/LABS/LAB5/logs:/app/logs
+      - templates_volume:/app/gasapp/templates
+    depends_on:
+      - db
+    networks:
+      - ishchenko_net
+
+volumes:
+  pgdata:
+  templates_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/vboxuser/LABS/LAB5/templates
+      o: bind
+
+networks:
+  ishchenko_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.20.5.0/24
+          gateway: 10.20.5.1
